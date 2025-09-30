@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CloudFlare Latency Test</title>
+</head>
+<body>
+    <h1>Edge Latency Tester</h1>
+    <button id="testBtn">Run Test</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function measureEdgeLatency() {
+            let start = performance.now();
+            let res = await fetch("/ping");
+
+            let end = performance.now();
+            let data = await res.json();
+
+            let rtt = end - start;
+
+            document.getElementById("output").textContent =
+                `RTT: ${rtt.toFixed(2)} ms\n` +
+                `ASN: ${data.asn}\n` +
+                `Country: ${data.country}\n` +
+                `City: ${data.city}\n` +
+                `PoP: ${data.colo}`;
+        }
+
+        document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
+    </script>
+</body>
+
+
+
+</html>
