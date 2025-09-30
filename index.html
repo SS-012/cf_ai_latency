@@ -10,8 +10,6 @@
 
     <script>
         async function measureEdgeLatency() {
-
-            // create loop for 5 pings
             let iterations = 5;
             let avg_rtt = 0;
             let data = null;
@@ -29,12 +27,12 @@
                 avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
                 min_rtt = Math.min(rtt, min_rtt);
                 max_rtt = Math.max(rtt, max_rtt);
-                
+
                 document.getElementById("output").textContent += `Ping ${i+1}: ${rtt.toFixed(2)} ms\n`;
             }
             let jitter = max_rtt - min_rtt;
 
-            document.getElementById("output").textContent =
+            document.getElementById("output").textContent +=
                 `Average RTT: ${avg_rtt.toFixed(2)} ms\n` +
                 `Jitter: ${jitter.toFixed(2)} ms\n` + 
                 `ASN: ${data.asn}\n` +
