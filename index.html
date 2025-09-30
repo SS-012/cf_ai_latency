@@ -15,6 +15,9 @@
             let data = null;
             let min_rtt = Infinity;
             let max_rtt = -Infinity;
+            let diff_sum = 0;
+            let jitter = 0;
+            let prev = null;
 
             var today = new Date();
             var dd = String(today.getDate()).padStart(2, '0');
@@ -37,13 +40,17 @@
                 let rtt = end - start;
 
                 avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
-                min_rtt = Math.min(rtt, min_rtt);
-                max_rtt = Math.max(rtt, max_rtt);
+
+                if (prev !== null) {
+                    let diff = Math.abs(rtt - prev);
+                    diff_sum += diff;
+                    jitter = diff_sum / i;
+
+                }
+                prev = rtt;
 
                 document.getElementById("output").textContent += `Ping ${i+1}: ${rtt.toFixed(2)} ms\n`;
             }
-            let jitter = max_rtt - min_rtt;
-
 
             document.getElementById("output").textContent +=
                 `\n=== Summary ===\n` +
