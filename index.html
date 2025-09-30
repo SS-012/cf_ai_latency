@@ -66,22 +66,24 @@
                 `Country: ${data.country}\n` +
                 `City: ${data.city}\n` +
                 `PoP: ${data.colo}`;
+
+            // Send results to the server
+            await fetch("/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                timestamp,
+                avg_rtt: avg_rtt.toFixed(2),
+                jitter: jitter.toFixed(2),
+                asn: data.asn,
+                country: data.country,
+                city: data.city,
+                colo: data.colo
+            })
+            });
         }
 
-        // Send results to the server
-        await fetch("/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            timestamp,
-            avg_rtt: avg_rtt.toFixed(2),
-            jitter: jitter.toFixed(2),
-            asn: data.asn,
-            country: data.country,
-            city: data.city,
-            colo: data.colo
-        })
-        });
+
 
 
         document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
