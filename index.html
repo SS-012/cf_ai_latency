@@ -9,16 +9,7 @@
     <pre id="output"></pre>
 
     <script>
-        async function measureEdgeLatency() {
-            let iterations = 5;
-            let avg_rtt = 0;
-            let data = null;
-            let min_rtt = Infinity;
-            let max_rtt = -Infinity;
-            let diff_sum = 0;
-            let jitter = 0;
-            let prev = null;
-
+        function getTimestamp() {
             var today = new Date();
             var dd = String(today.getDate()).padStart(2, '0');
             var mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -29,6 +20,21 @@
             var ss = String(today.getSeconds()).padStart(2, '0');
 
             var timestamp = mm + '/' + dd + '/' + yyyy + ' ' + hh + ':' + mmn + ':' + ss;
+
+            return timestamp;
+        }
+
+        async function measureEdgeLatency() {
+            let iterations = 5;
+            let avg_rtt = 0;
+            let data = null;
+            let min_rtt = Infinity;
+            let max_rtt = -Infinity;
+            let diff_sum = 0;
+            let jitter = 0;
+            let prev = null;
+
+            let timestamp = getTimestamp();
             document.getElementById("output").textContent = `Test run at: ${timestamp}\n\n`;
 
             for (let i = 0; i < iterations; i++) {
@@ -62,9 +68,25 @@
                 `PoP: ${data.colo}`;
         }
 
+        // Send results to the server
+        await fetch("/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            timestamp,
+            avg_rtt: avg_rtt.toFixed(2),
+            jitter: jitter.toFixed(2),
+            asn: data.asn,
+            country: data.country,
+            city: data.city,
+            colo: data.colo
+        })
+        });
+
+
         document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
     </script>
-</body>
+</body>x
 
 
 

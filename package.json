@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "agents": "^0.2.7"
+    "agents": "^0.2.7",
+    "hono": "^4.9.9"
+  },
+  "devDependencies": {
+    "wrangler": "^4.40.3"
   }
 }
