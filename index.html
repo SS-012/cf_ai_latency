@@ -16,6 +16,8 @@
             let min_rtt = Infinity;
             let max_rtt = -Infinity;
 
+            document.getElementById("output").textContent = "";
+
             for (let i = 0; i < iterations; i++) {
                 let start = performance.now();
                 let res = await fetch("/ping");
