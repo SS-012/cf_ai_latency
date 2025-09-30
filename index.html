@@ -16,7 +16,17 @@
             let min_rtt = Infinity;
             let max_rtt = -Infinity;
 
-            document.getElementById("output").textContent = "";
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yyyy = today.getFullYear();
+
+            var hh = String(today.getHours()).padStart(2, '0');
+            var mmn = String(today.getMinutes()).padStart(2, '0');
+            var ss = String(today.getSeconds()).padStart(2, '0');
+
+            var timestamp = mm + '/' + dd + '/' + yyyy + ' ' + hh + ':' + mmn + ':' + ss;
+            document.getElementById("output").textContent = `Test run at: ${timestamp}\n\n`;
 
             for (let i = 0; i < iterations; i++) {
                 let start = performance.now();
@@ -34,7 +44,9 @@
             }
             let jitter = max_rtt - min_rtt;
 
+
             document.getElementById("output").textContent +=
+                `\n=== Summary ===\n` +
                 `Average RTT: ${avg_rtt.toFixed(2)} ms\n` +
                 `Jitter: ${jitter.toFixed(2)} ms\n` + 
                 `ASN: ${data.asn}\n` +
