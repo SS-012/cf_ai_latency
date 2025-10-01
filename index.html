@@ -136,7 +136,7 @@
 
         avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
 
-        if (prev !== null) {
+        if (i > 0) {
           const diff = Math.abs(rtt - prev);
           diff_sum += diff;
           jitter = diff_sum / i;
