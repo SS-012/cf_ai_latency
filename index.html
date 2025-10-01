@@ -228,7 +228,15 @@
     const text = await res.text();
     console.log("AI raw response:", text);
 
-    const data = await res.json();
+    let data;
+    try {
+        data = JSON.parse(text);  
+    } catch (e) {
+        document.getElementById("aiOutput").textContent =
+        `❌ Error: Response was not JSON\n\n${text}`;
+        return;
+    }
+
     document.getElementById("aiOutput").textContent =
         `PoP: ${colo}\n` +
         `Avg RTT: ${data.summary.avgRtt?.toFixed?.(2) || "N/A"} ms\n` +
