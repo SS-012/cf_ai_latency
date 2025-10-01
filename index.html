@@ -73,7 +73,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 colo: data.colo,
-                timestamp,
+                timestamp: timestamp,
                 avg_rtt: avg_rtt.toFixed(2),
                 jitter: jitter.toFixed(2),
                 asn: data.asn,
