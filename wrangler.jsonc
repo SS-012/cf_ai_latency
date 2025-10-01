@@ -15,5 +15,6 @@
     "binding": "SECRET",  
     "secret_name": "latency"
   }  
-]
+],
+"ai": { "binding": "AI" }
 }

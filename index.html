@@ -108,6 +108,18 @@
     <canvas id="latencyChart"></canvas>
   </div>
 
+  <div style="margin-top:2rem; text-align:center;">
+  <h2 style="color:#f38020;">AI Insights</h2>
+  <select id="coloSelect">
+    <option value="IAD">Ashburn (IAD)</option>
+    <option value="ORD">Chicago (ORD)</option>
+    <option value="LAX">Los Angeles (LAX)</option>
+    <option value="ATL">Atlanta (ATL)</option>
+  </select>
+  <button onclick="getInsights()">Get Insights</button>
+  <pre id="aiOutput" style="margin-top:1rem; background:#fff7f0; padding:1rem; border-radius:8px; border:1px solid #f38020;"></pre>
+</div>
+
   <script>
     let chart;
 
@@ -196,8 +208,28 @@
         })
       });
     }
-
     document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
   </script>
+    <script>
+    async function getInsights() {
+    const colo = document.getElementById("coloSelect").value;
+    const res = await fetch(`/ai?colo=${colo}`);
+    const text = await res.text(); // get raw response
+    console.log("AI Worker raw response:", text);
+
+    try {
+        const data = JSON.parse(text);
+        document.getElementById("aiOutput").textContent =
+        `PoP: ${colo}\n` +
+        `Avg RTT: ${data.summary?.avgRtt || "N/A"} ms\n` +
+        `Jitter: ${data.summary?.avgJitter || "N/A"} ms\n` +
+        `Count: ${data.summary?.count || 0}\n\n` +
+        `🤖 AI Insight: ${data.insights || "No insights"}`;
+    } catch (e) {
+        document.getElementById("aiOutput").textContent =
+        `❌ Error: Response was not JSON\n\n${text}`;
+    }
+    }
+</script>
 </body>
 </html>
