@@ -225,6 +225,9 @@
     async function getInsights() {
     const colo = document.getElementById("coloSelect").value;
     const res = await fetch(`/ai?colo=${colo}`);
+    const text = await res.text();
+    console.log("AI raw response:", text);
+
     const data = await res.json();
     document.getElementById("aiOutput").textContent =
         `PoP: ${colo}\n` +
