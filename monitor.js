@@ -31,8 +31,6 @@ async function runMonitor() {
       diffSum += Math.abs(rtt - prev);
     }
     prev = rtt;
-
-    console.log(`Ping ${i + 1}: ${rtt.toFixed(2)} ms`);
   }
 
   const jitter = diffSum / (iterations - 1);
