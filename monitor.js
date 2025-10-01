@@ -37,13 +37,11 @@ async function runMonitor() {
 
   const jitter = diffSum / (iterations - 1);
 
-  console.log(`\n=== Summary ===`);
-  console.log(`Avg RTT: ${avg_rtt.toFixed(2)} ms`);
-  console.log(`Jitter: ${jitter.toFixed(2)} ms`);
-  console.log(
-    `PoP: ${data.colo}, City: ${data.city}, Country: ${data.country}, ASN: ${data.asn}`
-  );
 
+  //log console
+  const logLine = `[${timestamp}] Avg RTT: ${avg_rtt.toFixed(2)} ms | Jitter: ${jitter.toFixed(2)} ms | PoP: ${data.colo}, City: ${data.city}, Country: ${data.country}, ASN: ${data.asn}`;
+  console.log(logLine);
+  
   await fetch(SAVE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
