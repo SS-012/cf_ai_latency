@@ -73,12 +73,12 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 timestamp,
+                colo: data.colo,
                 avg_rtt: avg_rtt.toFixed(2),
                 jitter: jitter.toFixed(2),
                 asn: data.asn,
                 country: data.country,
-                city: data.city,
-                colo: data.colo
+                city: data.city
             })
             });
         }
