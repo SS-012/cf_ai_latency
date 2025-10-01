@@ -117,7 +117,18 @@
     <option value="ATL">Atlanta (ATL)</option>
   </select>
   <button onclick="getInsights()">Get Insights</button>
-  <pre id="aiOutput" style="margin-top:1rem; background:#fff7f0; padding:1rem; border-radius:8px; border:1px solid #f38020;"></pre>
+<pre id="aiOutput" 
+  style="
+    margin-top:1rem; 
+    background:#fff7f0; 
+    padding:1rem; 
+    border-radius:8px; 
+    border:1px solid #f38020; 
+    max-width:600px; 
+    white-space:pre-wrap; 
+    word-wrap:break-word; 
+    overflow-x:auto;">
+</pre>
 </div>
 
   <script>
@@ -214,22 +225,14 @@
     async function getInsights() {
     const colo = document.getElementById("coloSelect").value;
     const res = await fetch(`/ai?colo=${colo}`);
-    const text = await res.text(); // get raw response
-    console.log("AI Worker raw response:", text);
-
-    try {
-        const data = JSON.parse(text);
-        document.getElementById("aiOutput").textContent =
+    const data = await res.json();
+    document.getElementById("aiOutput").textContent =
         `PoP: ${colo}\n` +
-        `Avg RTT: ${data.summary?.avgRtt || "N/A"} ms\n` +
-        `Jitter: ${data.summary?.avgJitter || "N/A"} ms\n` +
-        `Count: ${data.summary?.count || 0}\n\n` +
-        `🤖 AI Insight: ${data.insights || "No insights"}`;
-    } catch (e) {
-        document.getElementById("aiOutput").textContent =
-        `❌ Error: Response was not JSON\n\n${text}`;
+        `Avg RTT: ${data.summary.avgRtt?.toFixed?.(2) || "N/A"} ms\n` +
+        `Jitter: ${data.summary.avgJitter?.toFixed?.(2) || "N/A"} ms\n` +
+        `Count: ${data.summary.count}\n\n` +
+        `🤖 AI Insight: ${data.insights}`;
     }
-    }
-</script>
+    </script>
 </body>
 </html>
