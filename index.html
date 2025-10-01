@@ -1,89 +1,203 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CloudFlare Latency Test</title>
+  <title>Cloudflare Edge Latency Tester</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: #f38020; /* Cloudflare orange */
+    }
+
+    button {
+      background: #f38020; /* orange */
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #d96e16; /* darker orange */
+    }
+
+    .cards {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff7f0; /* light orange tint */
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      min-width: 120px;
+      text-align: center;
+      border: 1px solid #f38020;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: #f38020;
+    }
+
+    .card p {
+      margin: 0.5rem 0 0;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #chart-container {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+      background: #fff7f0;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #f38020;
+    }
+  </style>
 </head>
 <body>
-    <h1>Edge Latency Tester</h1>
-    <button id="testBtn">Run Test</button>
-    <pre id="output"></pre>
+  <h1>Cloudflare Edge Latency Tester</h1>
+  <button id="testBtn">Run Test</button>
 
-    <script>
-        function getTimestamp() {
-            var today = new Date();
-            var dd = String(today.getDate()).padStart(2, '0');
-            var mm = String(today.getMonth() + 1).padStart(2, '0');
-            var yyyy = today.getFullYear();
+  <div class="cards">
+    <div class="card">
+      <h2>Average RTT</h2>
+      <p id="avgRtt">--</p>
+    </div>
+    <div class="card">
+      <h2>Jitter</h2>
+      <p id="jitter">--</p>
+    </div>
+    <div class="card">
+      <h2>ASN</h2>
+      <p id="asn">--</p>
+    </div>
+    <div class="card">
+      <h2>Location</h2>
+      <p id="location">--</p>
+    </div>
+    <div class="card">
+      <h2>PoP</h2>
+      <p id="colo">--</p>
+    </div>
+  </div>
 
-            var hh = String(today.getHours()).padStart(2, '0');
-            var mmn = String(today.getMinutes()).padStart(2, '0');
-            var ss = String(today.getSeconds()).padStart(2, '0');
+  <div id="chart-container">
+    <canvas id="latencyChart"></canvas>
+  </div>
 
-            var timestamp = mm + '/' + dd + '/' + yyyy + ' ' + hh + ':' + mmn + ':' + ss;
+  <script>
+    let chart;
 
-            return timestamp;
+    function getTimestamp() {
+      return new Date().toLocaleString();
+    }
+
+    async function measureEdgeLatency() {
+      const iterations = 15;
+      let avg_rtt = 0;
+      let diff_sum = 0;
+      let jitter = 0;
+      let prev = null;
+      let data = null;
+
+      const rtts = [];
+
+      for (let i = 0; i < iterations; i++) {
+        const start = performance.now();
+        const res = await fetch("/ping");
+        const end = performance.now();
+
+        data = await res.json();
+        const rtt = end - start;
+        rtts.push(rtt);
+
+        avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
+
+        if (prev !== null) {
+          const diff = Math.abs(rtt - prev);
+          diff_sum += diff;
+          jitter = diff_sum / i;
         }
+        prev = rtt;
+      }
 
-        async function measureEdgeLatency() {
-            let iterations = 5;
-            let avg_rtt = 0;
-            let data = null;
-            let min_rtt = Infinity;
-            let max_rtt = -Infinity;
-            let diff_sum = 0;
-            let jitter = 0;
-            let prev = null;
+      // Update cards
+      document.getElementById("avgRtt").textContent = avg_rtt.toFixed(2) + " ms";
+      document.getElementById("jitter").textContent = jitter.toFixed(2) + " ms";
+      document.getElementById("asn").textContent = data.asn;
+      document.getElementById("location").textContent = data.city + ", " + data.country;
+      document.getElementById("colo").textContent = data.colo;
 
-            let timestamp = getTimestamp();
-            document.getElementById("output").textContent = `Test run at: ${timestamp}\n\n`;
-
-            for (let i = 0; i < iterations; i++) {
-                let start = performance.now();
-                let res = await fetch("/ping");
-                let end = performance.now();
-                
-                data = await res.json();
-                let rtt = end - start;
-
-                avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
-
-                if (prev !== null) {
-                    let diff = Math.abs(rtt - prev);
-                    diff_sum += diff;
-                    jitter = diff_sum / i;
-
-                }
-                prev = rtt;
-
-                document.getElementById("output").textContent += `Ping ${i+1}: ${rtt.toFixed(2)} ms\n`;
+      // Update chart
+      const labels = rtts.map((_, i) => "Ping " + (i + 1));
+      if (chart) chart.destroy();
+      const ctx = document.getElementById("latencyChart").getContext("2d");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "RTT (ms)",
+            data: rtts,
+            borderColor: "#f38020",
+            backgroundColor: "rgba(243, 128, 32, 0.2)",
+            tension: 0.2,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
             }
-
-            document.getElementById("output").textContent +=
-                `\n=== Summary ===\n` +
-                `Average RTT: ${avg_rtt.toFixed(2)} ms\n` +
-                `Jitter: ${jitter.toFixed(2)} ms\n` + 
-                `ASN: ${data.asn}\n` +
-                `Country: ${data.country}\n` +
-                `City: ${data.city}\n` +
-                `PoP: ${data.colo}`;
-
-            // Send results to the server
-            await fetch("/save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                colo: data.colo,
-                timestamp: timestamp,
-                avg_rtt: avg_rtt.toFixed(2),
-                jitter: jitter.toFixed(2),
-                asn: data.asn,
-                country: data.country,
-                city: data.city
-            })
-            });
+          }
         }
+      });
 
-        document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
-    </script>
+      // Save results
+      await fetch("/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          colo: data.colo,
+          timestamp: getTimestamp(),
+          avg_rtt: avg_rtt.toFixed(2),
+          jitter: jitter.toFixed(2),
+          asn: data.asn,
+          country: data.country,
+          city: data.city
+        })
+      });
+    }
+
+    document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
+  </script>
 </body>
 </html>
