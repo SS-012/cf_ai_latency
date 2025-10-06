@@ -3,8 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
-  // Get Cloudflare headers from the request
-  const cf = (request as any).cf;
+  // Try multiple ways to get Cloudflare context
+  let cf = (request as any).cf;
+  
+  // Try to get context from globalThis if available
+  if (!cf && typeof globalThis !== 'undefined') {
+    cf = (globalThis as any).request?.cf || (globalThis as any).cf;
+  }
+  
+  // Try to get from process.env if available
+  if (!cf && typeof process !== 'undefined' && process.env) {
+    cf = (process as any).env?.cf;
+  }
   
   // Get CF headers that are actually available in Pages
   const cfRay = request.headers.get('cf-ray');
@@ -21,7 +31,11 @@ export async function GET(request: NextRequest) {
   const cfIpCityLongitude = request.headers.get('cf-ipcitylongitude');
   
   // Debug logging to see what's actually available
+  console.log('=== DEBUG INFO ===');
   console.log('CF Object available:', cf);
+  console.log('Request object keys:', Object.keys(request));
+  console.log('globalThis keys:', Object.keys(globalThis).filter(k => k.includes('cf') || k.includes('CF')));
+  console.log('All request headers:', Array.from(request.headers.entries()));
   console.log('CF Headers available:', {
     cfRay,
     cfVisitor,
@@ -63,11 +77,33 @@ export async function GET(request: NextRequest) {
     console.log('No CF data available, using UNK');
   }
   
+  // Return debug info in the response to see what's happening
   return NextResponse.json({
     msg: "pong", 
     asn, 
     country, 
     city, 
-    colo
+    colo,
+    debug: {
+      cfObject: cf,
+      cfHeaders: {
+        cfRay,
+        cfVisitor,
+        cfConnectingIp,
+        cfIpCountry,
+        cfIpCity,
+        cfIpRegion,
+        cfIpCountryCode,
+        cfIpCityCode,
+        cfIpRegionCode,
+        cfIpContinent,
+        cfIpCityLatitude,
+        cfIpCityLongitude
+      },
+      allHeaders: Array.from(request.headers.keys()).filter(h => h.startsWith('cf-')),
+      allRequestHeaders: Array.from(request.headers.entries()),
+      globalThisKeys: Object.keys(globalThis).filter(k => k.includes('cf') || k.includes('CF')),
+      requestKeys: Object.keys(request)
+    }
   });
 }
