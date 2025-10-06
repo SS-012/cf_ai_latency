@@ -3,17 +3,44 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
-  // Try multiple ways to get Cloudflare context
-  let cf = (request as any).cf;
+  // Get Cloudflare context using the proper method for Next.js on Pages
+  let cf;
   
-  // Try to get context from globalThis if available
-  if (!cf && typeof globalThis !== 'undefined') {
-    cf = (globalThis as any).request?.cf || (globalThis as any).cf;
-  }
-  
-  // Try to get from process.env if available
-  if (!cf && typeof process !== 'undefined' && process.env) {
-    cf = (process as any).env?.cf;
+  try {
+    // Method 1: Try request.cf directly
+    cf = (request as any).cf;
+    
+    // Method 2: Try to get from the Cloudflare context
+    if (!cf && typeof globalThis !== 'undefined') {
+      // Check if we're in a Cloudflare environment
+      const cloudflareRequest = (globalThis as any).request;
+      if (cloudflareRequest?.cf) {
+        cf = cloudflareRequest.cf;
+      }
+    }
+    
+    // Method 3: Try to access CF data through the request context
+    if (!cf) {
+      // In Cloudflare Pages, the CF data might be attached differently
+      const requestContext = (request as any).context || (request as any).env;
+      if (requestContext?.cf) {
+        cf = requestContext.cf;
+      }
+    }
+    
+    // Method 4: Try to get CF data from the runtime environment
+    if (!cf && typeof globalThis !== 'undefined') {
+      // Check for Cloudflare-specific globals
+      const cfGlobals = ['__CF$context', 'CF$context', 'cloudflare'];
+      for (const globalName of cfGlobals) {
+        if ((globalThis as any)[globalName]?.cf) {
+          cf = (globalThis as any)[globalName].cf;
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.log('Error accessing CF context:', error);
   }
   
   // Get CF headers that are actually available in Pages
@@ -42,6 +69,8 @@ export async function GET(request: NextRequest) {
   console.log('=== DEBUG INFO ===');
   console.log('CF Object available:', cf);
   console.log('Request object keys:', Object.keys(request));
+  console.log('Request prototype:', Object.getPrototypeOf(request));
+  console.log('Request constructor:', request.constructor.name);
   console.log('globalThis keys:', Object.keys(globalThis).filter(k => k.includes('cf') || k.includes('CF')));
   console.log('All request headers:', Array.from(request.headers.entries()));
   console.log('CF Headers available:', {
@@ -58,6 +87,14 @@ export async function GET(request: NextRequest) {
     cfIpCityLatitude,
     cfIpCityLongitude
   });
+  
+  // Try to access CF data through different methods
+  console.log('=== CF ACCESS ATTEMPTS ===');
+  console.log('Method 1 - request.cf:', (request as any).cf);
+  console.log('Method 2 - request.context:', (request as any).context);
+  console.log('Method 3 - request.env:', (request as any).env);
+  console.log('Method 4 - globalThis.request:', (globalThis as any).request?.cf);
+  console.log('Method 5 - process.env.cf:', (process as any).env?.cf);
   
   // Priority: CF object > CF headers > Vercel headers > fallback
   let asn, country, city, colo;

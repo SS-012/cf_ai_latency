@@ -7,6 +7,14 @@ const nextConfig = {
     };
     return config;
   },
+  // Enable Cloudflare-specific features
+  experimental: {
+    runtime: 'edge',
+  },
+  // Ensure CF context is available
+  env: {
+    CLOUDFLARE_CONTEXT: 'true',
+  },
 }
 
 module.exports = nextConfig
