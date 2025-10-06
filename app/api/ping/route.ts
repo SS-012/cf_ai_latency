@@ -30,6 +30,14 @@ export async function GET(request: NextRequest) {
   const cfIpCityLatitude = request.headers.get('cf-ipcitylatitude');
   const cfIpCityLongitude = request.headers.get('cf-ipcitylongitude');
   
+  // Get Vercel headers (these contain actual location data!)
+  const xVercelIpCity = request.headers.get('x-vercel-ip-city');
+  const xVercelIpCountry = request.headers.get('x-vercel-ip-country');
+  const xVercelIpCountryRegion = request.headers.get('x-vercel-ip-country-region');
+  const xVercelIpLatitude = request.headers.get('x-vercel-ip-latitude');
+  const xVercelIpLongitude = request.headers.get('x-vercel-ip-longitude');
+  const xRealIp = request.headers.get('x-real-ip');
+  
   // Debug logging to see what's actually available
   console.log('=== DEBUG INFO ===');
   console.log('CF Object available:', cf);
@@ -51,7 +59,7 @@ export async function GET(request: NextRequest) {
     cfIpCityLongitude
   });
   
-  // Try CF object first (if available), then fall back to CF headers
+  // Priority: CF object > CF headers > Vercel headers > fallback
   let asn, country, city, colo;
   
   if (cf && (cf.asn || cf.country || cf.city || cf.colo)) {
@@ -68,13 +76,21 @@ export async function GET(request: NextRequest) {
     city = cfIpCity || "UNK";
     colo = "UNK"; // Colo not available in standard CF headers
     console.log('Using CF headers:', { asn, country, city, colo });
+  } else if (xVercelIpCountry || xVercelIpCity) {
+    // Use Vercel headers (these actually have the location data!)
+    asn = "UNK"; // ASN not available in Vercel headers
+    country = xVercelIpCountry || "UNK";
+    // Decode the city name (it's URL encoded)
+    city = xVercelIpCity ? decodeURIComponent(xVercelIpCity) : "UNK";
+    colo = "UNK"; // Colo not available in Vercel headers
+    console.log('Using Vercel headers:', { asn, country, city, colo, raw: { xVercelIpCity, xVercelIpCountry, xVercelIpCountryRegion } });
   } else {
     // Fallback to unknown
     asn = "UNK";
     country = "UNK";
     city = "UNK";
     colo = "UNK";
-    console.log('No CF data available, using UNK');
+    console.log('No location data available, using UNK');
   }
   
   // Return debug info in the response to see what's happening
@@ -99,6 +115,14 @@ export async function GET(request: NextRequest) {
         cfIpContinent,
         cfIpCityLatitude,
         cfIpCityLongitude
+      },
+      vercelHeaders: {
+        xVercelIpCity,
+        xVercelIpCountry,
+        xVercelIpCountryRegion,
+        xVercelIpLatitude,
+        xVercelIpLongitude,
+        xRealIp
       },
       allHeaders: Array.from(request.headers.keys()).filter(h => h.startsWith('cf-')),
       allRequestHeaders: Array.from(request.headers.entries()),
