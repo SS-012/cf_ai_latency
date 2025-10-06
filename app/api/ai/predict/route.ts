@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 interface LatencyRecord {
   avg_rtt: number;
   jitter: number;
@@ -186,7 +188,7 @@ function calculateConfidence(dataPoints: number, avgJitter: number): number {
 }
 
 function generateFallbackRecommendations(avgRtt: number, avgJitter: number, trend: number, performance: string): any {
-  const recommendations = [];
+  const recommendations: string[] = [];
   
   if (avgRtt > 100) {
     recommendations.push('Consider traffic steering to nearby PoPs with better performance');
