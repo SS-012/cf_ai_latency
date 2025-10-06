@@ -12,7 +12,7 @@ export async function onRequestGet(context) {
 
   // Fetch last 100 entries for this colo
   const query = await DB.prepare(
-    "SELECT avg_rtt, jitter FROM rum_data WHERE colo = ? ORDER BY timestamp DESC LIMIT 20"
+    "SELECT avg_rtt, jitter FROM rum_data WHERE colo = ? ORDER BY timestamp DESC LIMIT 100"
   ).bind(colo).all();
 
   const rows = query.results;

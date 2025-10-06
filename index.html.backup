@@ -3,6 +3,9 @@
 <head>
   <title>Cloudflare Edge Latency Tester</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -32,7 +35,7 @@
     }
 
     button:hover {
-      background: #d96e16; /* darker orange */
+      background: #d96e16;
     }
 
     .cards {
@@ -44,7 +47,7 @@
     }
 
     .card {
-      background: #fff7f0; /* light orange tint */
+      background: #fff7f0;
       padding: 1rem 1.5rem;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -75,6 +78,27 @@
       border-radius: 8px;
       border: 1px solid #f38020;
     }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      max-width: 800px;
+      margin-top: 2rem;
+      border-radius: 8px;
+      border: 1px solid #f38020;
+    }
+
+    pre {
+      margin-top: 1rem;
+      background: #fff7f0;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #f38020;
+      max-width: 600px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body>
@@ -82,54 +106,30 @@
   <button id="testBtn">Run Test</button>
 
   <div class="cards">
-    <div class="card">
-      <h2>Average RTT</h2>
-      <p id="avgRtt">--</p>
-    </div>
-    <div class="card">
-      <h2>Jitter</h2>
-      <p id="jitter">--</p>
-    </div>
-    <div class="card">
-      <h2>ASN</h2>
-      <p id="asn">--</p>
-    </div>
-    <div class="card">
-      <h2>Location</h2>
-      <p id="location">--</p>
-    </div>
-    <div class="card">
-      <h2>PoP</h2>
-      <p id="colo">--</p>
-    </div>
+    <div class="card"><h2>Average RTT</h2><p id="avgRtt">--</p></div>
+    <div class="card"><h2>Jitter</h2><p id="jitter">--</p></div>
+    <div class="card"><h2>ASN</h2><p id="asn">--</p></div>
+    <div class="card"><h2>Location</h2><p id="location">--</p></div>
+    <div class="card"><h2>PoP</h2><p id="colo">--</p></div>
   </div>
 
   <div id="chart-container">
     <canvas id="latencyChart"></canvas>
   </div>
 
+  <!-- 🇺🇸 U.S. Map -->
+  <div id="map"></div>
+
   <div style="margin-top:2rem; text-align:center;">
-  <h2 style="color:#f38020;">AI Insights</h2>
-  <select id="coloSelect">
-    <option value="IAD">Ashburn (IAD)</option>
-    <option value="ORD">Chicago (ORD)</option>
-    <option value="LAX">Los Angeles (LAX)</option>
-    <option value="ATL">Atlanta (ATL)</option>
-  </select>
-  <button onclick="getInsights()">Get Insights</button>
-<pre id="aiOutput" 
-  style="
-    margin-top:1rem; 
-    background:#fff7f0; 
-    padding:1rem; 
-    border-radius:8px; 
-    border:1px solid #f38020; 
-    max-width:600px; 
-    white-space:pre-wrap; 
-    word-wrap:break-word; 
-    overflow-x:auto;">
-</pre>
-</div>
+    <h2 style="color:#f38020;">AI Insights</h2>
+    <select id="coloSelect">
+      <option value="IAD">Ashburn (IAD)</option>
+      <option value="ORD">Chicago (ORD)</option>
+      <option value="EWR">Newark (EWR)</option>
+    </select>
+    <button onclick="getInsights()">Get Insights</button>
+    <pre id="aiOutput"></pre>
+  </div>
 
   <script>
     let chart;
@@ -145,20 +145,17 @@
       let jitter = 0;
       let prev = null;
       let data = null;
-
       const rtts = [];
 
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
         const res = await fetch("/ping");
         const end = performance.now();
-
         data = await res.json();
         const rtt = end - start;
         rtts.push(rtt);
 
-        avg_rtt = avg_rtt + (rtt - avg_rtt) / (i + 1);
-
+        avg_rtt += (rtt - avg_rtt) / (i + 1);
         if (i > 0) {
           const diff = Math.abs(rtt - prev);
           diff_sum += diff;
@@ -167,14 +164,13 @@
         prev = rtt;
       }
 
-      // Update cards
       document.getElementById("avgRtt").textContent = avg_rtt.toFixed(2) + " ms";
       document.getElementById("jitter").textContent = jitter.toFixed(2) + " ms";
       document.getElementById("asn").textContent = data.asn;
       document.getElementById("location").textContent = data.city + ", " + data.country;
       document.getElementById("colo").textContent = data.colo;
 
-      // Update chart
+      // Chart
       const labels = rtts.map((_, i) => "Ping " + (i + 1));
       if (chart) chart.destroy();
       const ctx = document.getElementById("latencyChart").getContext("2d");
@@ -193,18 +189,11 @@
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
         }
       });
 
-      // Save results
       await fetch("/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,32 +207,94 @@
           city: data.city
         })
       });
+
+      updateMap();
     }
     document.getElementById("testBtn").addEventListener("click", measureEdgeLatency);
   </script>
-    <script>
+
+  <script>
     async function getInsights() {
-    const colo = document.getElementById("coloSelect").value;
-    const res = await fetch(`/ai?colo=${colo}`);
-    const text = await res.text();
-    console.log("AI raw response:", text);
+      const colo = document.getElementById("coloSelect").value;
+      const res = await fetch(`/ai?colo=${colo}`);
+      const text = await res.text();
+      console.log("AI raw response:", text);
 
-    let data;
-    try {
-        data = JSON.parse(text);  
-    } catch (e) {
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
         document.getElementById("aiOutput").textContent =
-        `❌ Error: Response was not JSON\n\n${text}`;
+          `❌ Error: Response was not JSON\n\n${text}`;
         return;
-    }
+      }
 
-    document.getElementById("aiOutput").textContent =
+      document.getElementById("aiOutput").textContent =
         `PoP: ${colo}\n` +
         `Avg RTT: ${data.summary.avgRtt?.toFixed?.(2) || "N/A"} ms\n` +
         `Jitter: ${data.summary.avgJitter?.toFixed?.(2) || "N/A"} ms\n` +
         `Count: ${data.summary.count}\n\n` +
         `🤖 AI Insight: ${data.insights}`;
     }
-    </script>
+  </script>
+
+  <!-- 🗺️ Map with U.S. focus and PoP markers -->
+  <script>
+    const POP_COORDS = {
+      IAD: [39.0438, -77.4874], // Ashburn, VA
+      ORD: [41.9742, -87.9073], // Chicago, IL
+      EWR: [40.6895, -74.1745], // Newark, NJ
+      LAX: [33.9416, -118.4085], // Los Angeles, CA
+      ATL: [33.6407, -84.4277], // Atlanta, GA
+      DFW: [32.8998, -97.0403]  // Dallas, TX
+    };
+
+    const map = L.map("map").setView([39.5, -98.35], 4); // USA center
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    let markers = [];
+
+    async function updateMap() {
+      try {
+        const res = await fetch("/all_data");
+        const records = await res.json();
+
+        // Clear old markers
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        for (const rec of records) {
+          const coords = POP_COORDS[rec.colo];
+          if (!coords) continue;
+
+          const color =
+            rec.avg_rtt < 50 ? "green" :
+            rec.avg_rtt < 100 ? "orange" : "red";
+
+          const marker = L.circleMarker(coords, {
+            radius: 10,
+            color,
+            fillColor: color,
+            fillOpacity: 0.8
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <b>${rec.city}, ${rec.country}</b><br>
+            PoP: ${rec.colo}<br>
+            Avg RTT: ${rec.avg_rtt} ms<br>
+            Jitter: ${rec.jitter} ms
+          `);
+
+          markers.push(marker);
+        }
+      } catch (err) {
+        console.error("Map update failed:", err);
+      }
+    }
+
+    updateMap();
+  </script>
 </body>
 </html>
