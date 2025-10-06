@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "preview": "npm run pages:build && wrangler pages dev .vercel/output/static"
+    "preview": "npm run pages:build && wrangler pages dev .vercel/output/static",
+    "cf-pages:build": "npm run pages:build"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.20",
