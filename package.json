@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "preview": "npm run pages:build && wrangler pages dev .vercel/output/static",
-    "cf-pages:build": "npm run pages:build"
+    "cf-pages:build": "npm run pages:build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.20",
@@ -25,12 +27,13 @@
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
+    "@opennextjs/cloudflare": "^1.9.1",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "14.0.0",
     "typescript": "^5.0.0",
-    "wrangler": "^4.40.3"
+    "wrangler": "^4.42.0"
   }
 }
