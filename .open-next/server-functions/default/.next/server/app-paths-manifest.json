@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/ai/predict/route": "app/api/ai/predict/route.js",
+  "/api/ai/route": "app/api/ai/route.js",
+  "/api/all_data/route": "app/api/all_data/route.js",
+  "/api/chat/route": "app/api/chat/route.js",
+  "/api/ping/route": "app/api/ping/route.js",
+  "/api/save/route": "app/api/save/route.js",
+  "/api/debug-headers/route": "app/api/debug-headers/route.js",
+  "/page": "app/page.js"
+}
