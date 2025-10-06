@@ -7,6 +7,9 @@ compatibility_flags = ["nodejs_compat"]
 # Cloudflare Pages configuration
 pages_build_output_dir = ".vercel/output/static"
 
+# Worker configuration for CF headers injection
+main = "worker.js"
+
 # D1 Database
 [[d1_databases]]
 binding = "DB"
