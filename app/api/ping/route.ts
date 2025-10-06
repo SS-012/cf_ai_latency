@@ -6,17 +6,10 @@ export async function GET(request: NextRequest) {
   // Get Cloudflare headers from the request
   const cf = (request as any).cf;
   
-  // Check for CF headers injected by our worker
-  const cfAsn = request.headers.get('cf-asn');
-  const cfCountry = request.headers.get('cf-country');
-  const cfCity = request.headers.get('cf-city');
-  const cfColo = request.headers.get('cf-colo');
-  const cfRegion = request.headers.get('cf-region');
-  const cfTimezone = request.headers.get('cf-timezone');
-  const cfLatitude = request.headers.get('cf-latitude');
-  const cfLongitude = request.headers.get('cf-longitude');
-  
-  // Also check standard CF headers that are often available in Pages
+  // Get CF headers that are actually available in Pages
+  const cfRay = request.headers.get('cf-ray');
+  const cfVisitor = request.headers.get('cf-visitor');
+  const cfConnectingIp = request.headers.get('cf-connecting-ip');
   const cfIpCountry = request.headers.get('cf-ipcountry');
   const cfIpCity = request.headers.get('cf-ipcity');
   const cfIpRegion = request.headers.get('cf-ipregion');
@@ -26,20 +19,13 @@ export async function GET(request: NextRequest) {
   const cfIpContinent = request.headers.get('cf-ipcontinent');
   const cfIpCityLatitude = request.headers.get('cf-ipcitylatitude');
   const cfIpCityLongitude = request.headers.get('cf-ipcitylongitude');
-  const cfRay = request.headers.get('cf-ray');
   
-  // Debug logging to understand what's available
+  // Debug logging to see what's actually available
+  console.log('CF Object available:', cf);
   console.log('CF Headers available:', {
-    cf: !!cf,
-    cfAsn,
-    cfCountry,
-    cfCity,
-    cfColo,
-    cfRegion,
-    cfTimezone,
-    cfLatitude,
-    cfLongitude,
-    // Standard CF headers
+    cfRay,
+    cfVisitor,
+    cfConnectingIp,
     cfIpCountry,
     cfIpCity,
     cfIpRegion,
@@ -48,79 +34,40 @@ export async function GET(request: NextRequest) {
     cfIpRegionCode,
     cfIpContinent,
     cfIpCityLatitude,
-    cfIpCityLongitude,
-    cfRay,
-    // Also check original CF object
-    originalCf: {
-      asn: cf?.asn,
-      country: cf?.country,
-      city: cf?.city,
-      colo: cf?.colo,
-      region: cf?.region,
-      timezone: cf?.timezone,
-      latitude: cf?.latitude,
-      longitude: cf?.longitude
-    }
+    cfIpCityLongitude
   });
   
-  // Check for Cloudflare headers (original CF object, worker-injected, or standard CF headers)
-  if ((cf && (cf.asn || cf.country || cf.city || cf.colo)) || 
-      (cfAsn || cfCountry || cfCity || cfColo) ||
-      (cfIpCountry || cfIpCity || cfIpRegion)) {
-    
-    // Priority: worker-injected headers > original CF object > standard CF headers
-    const asn = cfAsn || cf?.asn || 'Unknown';
-    const country = cfCountry || cf?.country || cfIpCountry || 'Unknown';
-    const city = cfCity || cf?.city || cfIpCity || 'Unknown';
-    const colo = cfColo || cf?.colo || 'Unknown';
-    const region = cfRegion || cf?.region || cfIpRegion || 'Unknown';
-    const timezone = cfTimezone || cf?.timezone || 'Unknown';
-    const latitude = cfLatitude || cf?.latitude || (cfIpCityLatitude ? parseFloat(cfIpCityLatitude) : null);
-    const longitude = cfLongitude || cf?.longitude || (cfIpCityLongitude ? parseFloat(cfIpCityLongitude) : null);
-    
-    console.log('Using CF data:', { asn, country, city, colo, region, timezone, latitude, longitude });
-    
-    return NextResponse.json({
-      msg: 'pong',
-      asn,
-      country,
-      city,
-      colo,
-      region,
-      timezone,
-      latitude: latitude ? parseFloat(latitude) : null,
-      longitude: longitude ? parseFloat(longitude) : null,
-      source: cfAsn ? 'worker-injected' : 'original-cf'
-    });
+  // Try CF object first (if available), then fall back to CF headers
+  let asn, country, city, colo;
+  
+  if (cf && (cf.asn || cf.country || cf.city || cf.colo)) {
+    // Use CF object if available (like in Workers)
+    asn = cf.asn || "UNK";
+    country = cf.country || "UNK";
+    city = cf.city || "UNK";
+    colo = cf.colo || "UNK";
+    console.log('Using CF object:', { asn, country, city, colo });
+  } else if (cfIpCountry || cfIpCity || cfIpRegion) {
+    // Use CF headers that are available in Pages
+    asn = "UNK"; // ASN not available in standard CF headers
+    country = cfIpCountry || "UNK";
+    city = cfIpCity || "UNK";
+    colo = "UNK"; // Colo not available in standard CF headers
+    console.log('Using CF headers:', { asn, country, city, colo });
   } else {
-    // Fallback: Try to get location from other headers or use geolocation
-    const userAgent = request.headers.get('user-agent') || '';
-    const acceptLanguage = request.headers.get('accept-language') || '';
-    const xForwardedFor = request.headers.get('x-forwarded-for') || '';
-    const xRealIp = request.headers.get('x-real-ip') || '';
-    
-    console.log('Using fallback - Headers:', {
-      userAgent: userAgent.substring(0, 100),
-      acceptLanguage,
-      xForwardedFor,
-      xRealIp,
-      availableHeaders: Array.from(request.headers.keys()).filter(h => h.startsWith('cf-'))
-    });
-    
-    // For production, we should not use random mock data
-    // Instead, return a message indicating location detection failed
-    return NextResponse.json({
-      msg: 'pong',
-      asn: 'Unknown',
-      country: 'Unknown', 
-      city: 'Unknown',
-      colo: 'Unknown',
-      error: 'Location detection unavailable - CF headers not found',
-      debug: {
-        cfObject: !!cf,
-        workerHeaders: !!cfAsn,
-        availableHeaders: Array.from(request.headers.keys()).filter(h => h.startsWith('cf-'))
-      }
-    });
+    // Fallback to unknown
+    asn = "UNK";
+    country = "UNK";
+    city = "UNK";
+    colo = "UNK";
+    console.log('No CF data available, using UNK');
   }
+  
+  return NextResponse.json({
+    msg: "pong", 
+    asn, 
+    country, 
+    city, 
+    colo
+  });
 }
