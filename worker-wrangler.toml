@@ -1,5 +1,0 @@
-name = "cf-headers-worker"
-compatibility_date = "2025-09-30"
-main = "worker.js"
-
-# This worker will be deployed separately and sit in front of your Pages application
