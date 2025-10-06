@@ -2,10 +2,11 @@ name = "cf-ai-latency"
 compatibility_date = "2025-09-30"
 compatibility_flags = ["nodejs_compat"]
 
-# Force deployment update
-
-# Cloudflare Pages configuration
-pages_build_output_dir = ".vercel/output/static"
+# OpenNext configuration for Cloudflare Workers
+main = ".open-next/worker.js"
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
 
 # D1 Database
 [[d1_databases]]
