@@ -60,7 +60,7 @@ export default function Home() {
     try {
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
-        const res = await fetch("/ping");
+        const res = await fetch("/api/ping");
         const end = performance.now();
         data = await res.json();
         const rtt = end - start;
