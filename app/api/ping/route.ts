@@ -16,6 +16,18 @@ export async function GET(request: NextRequest) {
   const cfLatitude = request.headers.get('cf-latitude');
   const cfLongitude = request.headers.get('cf-longitude');
   
+  // Also check standard CF headers that are often available in Pages
+  const cfIpCountry = request.headers.get('cf-ipcountry');
+  const cfIpCity = request.headers.get('cf-ipcity');
+  const cfIpRegion = request.headers.get('cf-ipregion');
+  const cfIpCountryCode = request.headers.get('cf-ipcountrycode');
+  const cfIpCityCode = request.headers.get('cf-ipcitycode');
+  const cfIpRegionCode = request.headers.get('cf-ipregioncode');
+  const cfIpContinent = request.headers.get('cf-ipcontinent');
+  const cfIpCityLatitude = request.headers.get('cf-ipcitylatitude');
+  const cfIpCityLongitude = request.headers.get('cf-ipcitylongitude');
+  const cfRay = request.headers.get('cf-ray');
+  
   // Debug logging to understand what's available
   console.log('CF Headers available:', {
     cf: !!cf,
@@ -27,6 +39,17 @@ export async function GET(request: NextRequest) {
     cfTimezone,
     cfLatitude,
     cfLongitude,
+    // Standard CF headers
+    cfIpCountry,
+    cfIpCity,
+    cfIpRegion,
+    cfIpCountryCode,
+    cfIpCityCode,
+    cfIpRegionCode,
+    cfIpContinent,
+    cfIpCityLatitude,
+    cfIpCityLongitude,
+    cfRay,
     // Also check original CF object
     originalCf: {
       asn: cf?.asn,
@@ -40,19 +63,20 @@ export async function GET(request: NextRequest) {
     }
   });
   
-  // Check for Cloudflare headers (both original CF object and worker-injected headers)
+  // Check for Cloudflare headers (original CF object, worker-injected, or standard CF headers)
   if ((cf && (cf.asn || cf.country || cf.city || cf.colo)) || 
-      (cfAsn || cfCountry || cfCity || cfColo)) {
+      (cfAsn || cfCountry || cfCity || cfColo) ||
+      (cfIpCountry || cfIpCity || cfIpRegion)) {
     
-    // Use worker-injected headers first, then fall back to original CF object
+    // Priority: worker-injected headers > original CF object > standard CF headers
     const asn = cfAsn || cf?.asn || 'Unknown';
-    const country = cfCountry || cf?.country || 'Unknown';
-    const city = cfCity || cf?.city || 'Unknown';
+    const country = cfCountry || cf?.country || cfIpCountry || 'Unknown';
+    const city = cfCity || cf?.city || cfIpCity || 'Unknown';
     const colo = cfColo || cf?.colo || 'Unknown';
-    const region = cfRegion || cf?.region || 'Unknown';
+    const region = cfRegion || cf?.region || cfIpRegion || 'Unknown';
     const timezone = cfTimezone || cf?.timezone || 'Unknown';
-    const latitude = cfLatitude || cf?.latitude || null;
-    const longitude = cfLongitude || cf?.longitude || null;
+    const latitude = cfLatitude || cf?.latitude || (cfIpCityLatitude ? parseFloat(cfIpCityLatitude) : null);
+    const longitude = cfLongitude || cf?.longitude || (cfIpCityLongitude ? parseFloat(cfIpCityLongitude) : null);
     
     console.log('Using CF data:', { asn, country, city, colo, region, timezone, latitude, longitude });
     

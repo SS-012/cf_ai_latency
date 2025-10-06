@@ -19,9 +19,12 @@ export async function GET(request: NextRequest) {
     cf: cf || 'not available',
     headers: headers,
     cfHeaders: {
+      // Core CF headers
       'cf-ray': request.headers.get('cf-ray'),
       'cf-visitor': request.headers.get('cf-visitor'),
       'cf-connecting-ip': request.headers.get('cf-connecting-ip'),
+      
+      // Location headers
       'cf-ipcountry': request.headers.get('cf-ipcountry'),
       'cf-ipcity': request.headers.get('cf-ipcity'),
       'cf-ipregion': request.headers.get('cf-ipregion'),
@@ -40,26 +43,16 @@ export async function GET(request: NextRequest) {
       'cf-ipcitylatitude': request.headers.get('cf-ipcitylatitude'),
       'cf-ipcitylongitude': request.headers.get('cf-ipcitylongitude'),
       'cf-ipcitymetrocode': request.headers.get('cf-ipcitymetrocode'),
-      'cf-ipcitysubdivision': request.headers.get('cf-ipcitysubdivision'),
-      'cf-ipcitysubdivisioncode': request.headers.get('cf-ipcitysubdivisioncode'),
-      'cf-ipcitysubdivision2': request.headers.get('cf-ipcitysubdivision2'),
-      'cf-ipcitysubdivision2code': request.headers.get('cf-ipcitysubdivision2code'),
-      'cf-ipcitysubdivision3': request.headers.get('cf-ipcitysubdivision3'),
-      'cf-ipcitysubdivision3code': request.headers.get('cf-ipcitysubdivision3code'),
-      'cf-ipcitysubdivision4': request.headers.get('cf-ipcitysubdivision4'),
-      'cf-ipcitysubdivision4code': request.headers.get('cf-ipcitysubdivision4code'),
-      'cf-ipcitysubdivision5': request.headers.get('cf-ipcitysubdivision5'),
-      'cf-ipcitysubdivision5code': request.headers.get('cf-ipcitysubdivision5code'),
-      'cf-ipcitysubdivision6': request.headers.get('cf-ipcitysubdivision6'),
-      'cf-ipcitysubdivision6code': request.headers.get('cf-ipcitysubdivision6code'),
-      'cf-ipcitysubdivision7': request.headers.get('cf-ipcitysubdivision7'),
-      'cf-ipcitysubdivision7code': request.headers.get('cf-ipcitysubdivision7code'),
-      'cf-ipcitysubdivision8': request.headers.get('cf-ipcitysubdivision8'),
-      'cf-ipcitysubdivision8code': request.headers.get('cf-ipcitysubdivision8code'),
-      'cf-ipcitysubdivision9': request.headers.get('cf-ipcitysubdivision9'),
-      'cf-ipcitysubdivision9code': request.headers.get('cf-ipcitysubdivision9code'),
-      'cf-ipcitysubdivision10': request.headers.get('cf-ipcitysubdivision10'),
-      'cf-ipcitysubdivision10code': request.headers.get('cf-ipcitysubdivision10code')
+      
+      // Worker-injected headers (if any)
+      'cf-asn': request.headers.get('cf-asn'),
+      'cf-country': request.headers.get('cf-country'),
+      'cf-city': request.headers.get('cf-city'),
+      'cf-colo': request.headers.get('cf-colo'),
+      'cf-region': request.headers.get('cf-region'),
+      'cf-timezone': request.headers.get('cf-timezone'),
+      'cf-latitude': request.headers.get('cf-latitude'),
+      'cf-longitude': request.headers.get('cf-longitude')
     }
   });
 }
