@@ -2,9 +2,11 @@ name = "cf-ai-latency"
 compatibility_date = "2025-09-30"
 compatibility_flags = ["nodejs_compat"]
 
+# Force deployment update
+
 # Cloudflare Pages configuration
 pages_build_output_dir = ".vercel/output/static"
-build_command = "npm run cf-pages:build"
+build_command = "npm run pages:build"
 
 # D1 Database
 [[d1_databases]]
