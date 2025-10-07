@@ -11,7 +11,11 @@
     "cf-pages:build": "npm run pages:build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "build:cf": "opennextjs-cloudflare build && cp .open-next/worker.js .open-next/_worker.js",
+    "dev:cf": "npm run build:cf && wrangler pages dev .open-next --compatibility-date=2025-03-25 --port 8789",
+    "deploy:cf": "opennextjs-cloudflare deploy"
+  
   },
   "dependencies": {
     "@types/leaflet": "^1.9.20",
