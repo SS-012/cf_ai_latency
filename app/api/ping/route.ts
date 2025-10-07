@@ -1,6 +1,6 @@
+
+
 import { NextRequest, NextResponse } from 'next/server';
-
-
 
 export async function GET(request: NextRequest) {
   // In Cloudflare Pages with Next.js, try to get CF context from various sources
