@@ -1,7 +1,10 @@
 name = "cf-ai-latency"
+compatibility_date = "2025-03-25"
+compatibility_flags = ["nodejs_compat"]
 
-# Pages build configuration
-pages_build_output_dir = ".open-next/assets"
+[assets]
+directory = ".open-next/assets"
+
 
 # D1 Database
 [[d1_databases]]
